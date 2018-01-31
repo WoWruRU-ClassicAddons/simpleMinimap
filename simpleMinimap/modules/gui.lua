@@ -1,15 +1,61 @@
-simpleMinimap_GUI = simpleMinimap:NewModule("gui")
 local D = AceLibrary("Dewdrop-2.0")
 local L = AceLibrary("AceLocale-2.2"):new("simpleMinimap_GUI")
+
 L:RegisterTranslations("enUS", function() return({
 	enabled = "enabled",
-		enabled_desc = "enable / disable GUI options",
+	enabled_desc = "enable / disable GUI options",
 	gui = "GUI",
-		gui_desc = "dropdown menu options",
+	gui_desc = "dropdown menu options",
 	mouse = "mouse button",
-		mouse_desc = "mouse button that activiates the dropdown menu"
+	mouse_desc = "mouse button that activiates the dropdown menu"
+}) end)
+
+L:RegisterTranslations("zhTW", function() return({ 
+	gui = "圖形使用介面", 
+	gui_desc = "顯示下拉式選單", 
+	mouse = "滑鼠按鈕", 
+	mouse_desc = "設定呼叫下拉式選單的滑鼠按鈕" 
+}) end)
+
+L:RegisterTranslations("koKR", function() return({
+	gui = "GUI",
+	gui_desc = "메뉴 설정",
+	mouse = "마우스 버튼",
+	mouse_desc = "마우스 버튼으로 메뉴 열기"
+}) end)
+
+L:RegisterTranslations("deDE", function() return({
+	gui = "GUI",
+	gui_desc = "Dropdownmenü Optionen",
+	mouse = "Maustaste",
+	mouse_desc = "Maustaste die das Dropdownmenü aktiviert"
+}) end)
+
+L:RegisterTranslations("zhCN", function() return({ 
+	gui = "GUI", 
+	gui_desc = "拖放菜单设置", 
+	mouse = "鼠标按钮", 
+	mouse_desc = "呼出拖放菜单的鼠标按钮" 
+}) end)
+
+L:RegisterTranslations("esES", function() return({
+	gui = "Interfaz",
+	gui_desc = "Opciones de men\195\186s desplegables",
+	mouse = "Bot\195\179n del rat\195\179n",
+	mouse_desc = "Bot\195\179n del rat\195\179n que activa el men\195\186 desplegable"
+}) end)
+
+L:RegisterTranslations("ruRU", function() return({
+	enabled = "Включено",
+	enabled_desc = "Вкл./Выкл. настройки GUI",
+	gui = "GUI",
+	gui_desc = "Контекстное меню настроек",
+	mouse = "Кнопка мыши",
+	mouse_desc = "Кнопка мыши приводящая в действие контекстное меню"
 }) end)
 --
+simpleMinimap_GUI = simpleMinimap:NewModule("gui")
+
 function simpleMinimap_GUI:OnInitialize()
 	self.db = simpleMinimap:AcquireDBNamespace("gui")
 	self.buttons = { "LeftButton", "MiddleButton", "RightButton", "Button4", "Button5" }

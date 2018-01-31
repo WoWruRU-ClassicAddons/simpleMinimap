@@ -1,15 +1,67 @@
-simpleMinimap_Movers = simpleMinimap:NewModule("movers")
 local L = AceLibrary("AceLocale-2.2"):new("simpleMinimap_Movers")
+
 L:RegisterTranslations("enUS", function() return({
 	enabled = "enabled",
-		enabled_desc = "enable / disable mover frames",
-	hide = "hide",
-		hide_desc = "always hide the mover frames",
-	movers = "movers",
-		movers_desc = "mover frames",
+	enabled_desc = "enable / disable mover frames",
+	alpha = true,
+	alpha_desc = "alpha of the mover frames",
+	movers = true,
+	movers_desc = "mover frames",
 	drag = "left-click to drag"
 }) end)
---
+
+L:RegisterTranslations("zhTW", function() return({ 
+	alpha = "透明度", 
+	alpha_desc = "移動框體的透明度", 
+	movers = "移動", 
+	movers_desc = "移動框體 - 說明:: 鎖定迷你地圖以隱藏移動框體", 
+	drag = "左鍵點擊拖曳框體" 
+}) end)
+
+L:RegisterTranslations("koKR", function() return({
+	alpha = "투명도",
+	alpha_desc = "앵커 프레임의 투명도",
+	movers = "앵커",
+	movers_desc = "앵커 프레임",
+	drag = "좌클릭 : 드래그"
+}) end)
+
+L:RegisterTranslations("deDE", function() return({
+	alpha = "Helligkeit",
+	alpha_desc = "Helligkeit der Quest-/Ankerfenster",
+	movers = "Quest-/Ankerfenster",
+	movers_desc = "Optionen für die Quest-/Ankerfenster - HINWEIS: Um die Quest-/Ankerfenster auszublenden Minimap sperren ('Sperre Minimap')",
+	drag = "Linksklick zum ziehen"
+}) end)
+
+L:RegisterTranslations("zhCN", function() return({ 
+	alpha = "透明度", 
+	alpha_desc = "移动框体的透明度", 
+	movers = "移动", 
+	movers_desc = "移动框体 - NOTE :: 锁定迷你地图以隐藏移动框体", 
+	drag = "左键点击拖动框体" 
+}) end)
+
+L:RegisterTranslations("esES", function() return({
+	alpha = "Transparencia",
+	alpha_desc = "Transparencia de los desplazadores",
+	movers = "Desplazadores",
+	movers_desc = "Desplazadores - NOTA: bloquea el minimapa para ocultarlos",
+	drag = "Clic para arrastrar"
+}) end)
+
+L:RegisterTranslations("ruRU", function() return({
+	enabled = "Включено",
+	enabled_desc = "Вкл./Выкл. передвижение фреймов",
+	alpha = "Прозрачность",
+	alpha_desc = "Прозрачность передвигаемого фрейма",
+	movers = "Перемещения",
+	movers_desc = "Перемещение фреймов - Заметка :: Закрепите мини-карту для скрытия выделения фреймов перемещения",
+	drag = "ЛКМ чтобы перетащить"
+}) end)
+
+simpleMinimap_Movers = simpleMinimap:NewModule("movers")
+
 function simpleMinimap_Movers:OnInitialize()
 	self.db = simpleMinimap:AcquireDBNamespace("movers")
 	self.movers = {
@@ -24,7 +76,7 @@ function simpleMinimap_Movers:OnInitialize()
 		QuestTimerFrame = { anchor=MinimapCluster, point="TOPRIGHT", rpoint="BOTTOMRIGHT", x=10, y=0 },
 		smmCaptureMover = { anchor=MinimapCluster, point="TOPRIGHT", rpoint="BOTTOMRIGHT", x=10, y=15 }
 	}
-	self.defaults = { enabled=true, framePos={} }
+	self.defaults = { enabled=true, alpha = 0.4, framePos={} }
 	self.options = {
 		type="group", name=L.movers, desc=L.movers_desc,
 		args={
@@ -42,10 +94,11 @@ function simpleMinimap_Movers:OnInitialize()
 			spacer2={
 				type="header", order=4, name="---"
 			},
-			hide={
-				type="toggle", order=10, name=L.hide, desc=L.hide_desc,
-				get=function() return(self.db.profile.hide) end,
-				set=function(x) self.db.profile.hide=x self:UpdateScreen() end
+			alpha={
+				type="range", order=10, name=L.alpha, desc=L.alpha_desc,
+				min = 0, max = 1, step = 0.05, isPercent = true,
+				get=function() return(self.db.profile.alpha) end,
+				set=function(x) self.db.profile.alpha=x self:UpdateScreen() end
 			}
 		}
 	}
@@ -104,8 +157,9 @@ function simpleMinimap_Movers:UpdateScreen()
 			movee:SetPoint(self.framesDefault[n].point, self.framesDefault[n].anchor, self.framesDefault[n].rpoint, self.framesDefault[n].x, self.framesDefault[n].y)
 			movee:SetUserPlaced(false)
 		end
-		if(simpleMinimap:IsModuleActive(self) and not self.db.profile.hide and not simpleMinimap.db.profile.lock) then
+		if(simpleMinimap:IsModuleActive(self) and not simpleMinimap.db.profile.lock) then
 			mover:Show()
+			mover:SetAlpha(self.db.profile.alpha)
 		else
 			mover:Hide()
 		end
