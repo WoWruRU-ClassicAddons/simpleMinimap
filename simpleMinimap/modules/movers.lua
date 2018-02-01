@@ -115,7 +115,6 @@ function mod:OnEnable()
 				f:SetHeight(s[2])
 				f:ClearAllPoints()
 				if(getglobal(n)) then
-				ServTr:PrintTab(getglobal(n)[1])
 					f.smmMover = getglobal(n)
 					f:SetPoint("CENTER", f.smmMover) 
 				else
