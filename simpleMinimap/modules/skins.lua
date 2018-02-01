@@ -1,13 +1,14 @@
-local L = AceLibrary("AceLocale-2.2"):new("simpleMinimap_Skins")
+local mod = simpleMinimap:NewModule("skins")
+local L = AceLibrary("AceLocale-2.2"):new("simpleMinimap_skins")
 
 L:RegisterTranslations("enUS", function() return({
-	enabled = "enabled",
+	enabled = true,
 	enabled_desc = "enable / disable skin module",
-	border = "border",
+	border = true,
 	border_desc = "minimap border texture",
-	skin = "skin",
+	skin = true,
 	skin_desc = "minimap skin and shape",
-	skins = "skins",
+	skins = true,
 	skins_desc = "minimap skin and shape module",
 	skin1 = "round (default)",
 	skin2 = "square",
@@ -37,6 +38,8 @@ L:RegisterTranslations("zhTW", function() return({
 }) end)
 
 L:RegisterTranslations("koKR", function() return({
+	enabled = "켬",
+	enabled_desc = "스킨 모듈 켜기 / 끄기",
 	border = "테두리",
 	border_desc = "미니맵 테두리 텍스쳐",
 	skin = "스킨",
@@ -54,6 +57,8 @@ L:RegisterTranslations("koKR", function() return({
 }) end)
 
 L:RegisterTranslations("deDE", function() return({
+	enabled = "aktiviert",
+	enabled_desc = "aktiviert / deaktiviert das skin modul",
 	border = "Rand",
 	border_desc = "Randtextur",
 	skin = "Skin",
@@ -123,40 +128,38 @@ L:RegisterTranslations("ruRU", function() return({
 	skin8 = "Нижний правый угол"
 }) end)
 
-simpleMinimap_Skins = simpleMinimap:NewModule("skins")
-
-function simpleMinimap_Skins:OnInitialize()
+function mod:OnInitialize()
 	self.db = simpleMinimap:AcquireDBNamespace("skins")
 	self.skins = {
 		{
 			shape="ROUND",
 			texture="Interface\\Minimap\\UI-Minimap-Border",
 			mask="Textures\\MinimapMask"
-		},{
+			},{
 			shape="SQUARE",
 			texture="Interface\\AddOns\\simpleMinimap\\skins\\SquareMinimap",
 			mask="Interface\\AddOns\\simpleMinimap\\skins\\smmSquareMask"
-		},{
+			},{
 			shape="SQUARE",
 			texture="Interface\\AddOns\\simpleMinimap\\skins\\smmSkin",
 			mask="Interface\\AddOns\\simpleMinimap\\skins\\smmSquareMask"
-		},{
+			},{
 			shape="SQUARE",
 			texture="Interface\\AddOns\\simpleMinimap\\skins\\thinSquare2",
 			mask="Interface\\AddOns\\simpleMinimap\\skins\\smmSquareMask"
-		},{
+			},{
 			shape="CORNER-BOTTOMLEFT",
 			texture="Interface\\AddOns\\simpleMinimap\\skins\\dLxTopRight",
 			mask="Interface\\AddOns\\simpleMinimap\\skins\\dLxTopRightMask"
-		},{
+			},{
 			shape="CORNER-BOTTOMRIGHT",
 			texture="Interface\\AddOns\\simpleMinimap\\skins\\dLxTopLeft",
 			mask="Interface\\AddOns\\simpleMinimap\\skins\\dLxTopLeftMask"
-		},{
+			},{
 			shape="CORNER-TOPRIGHT",
 			texture="Interface\\AddOns\\simpleMinimap\\skins\\dLxBottomLeft",
 			mask="Interface\\AddOns\\simpleMinimap\\skins\\dLxBottomLeftMask"
-		},{
+			},{
 			shape="CORNER-TOPLEFT",
 			texture="Interface\\AddOns\\simpleMinimap\\skins\\dLxBottomRight",
 			mask="Interface\\AddOns\\simpleMinimap\\skins\\dLxBottomRightMask"
@@ -164,7 +167,7 @@ function simpleMinimap_Skins:OnInitialize()
 	}
 	self.defaults = { enabled=true, skin=1, border=true }
 	self.options = {
-		type="group", name=L.skins, desc=L.skins_desc,
+		type="group", order=80, name=L.skins, desc=L.skins_desc,
 		args={
 			title={
 				type="header", order=1, name="simpleMinimap |cFFFFFFCC"..L.skins
@@ -232,48 +235,60 @@ function simpleMinimap_Skins:OnInitialize()
 			}
 		}
 	}
-	simpleMinimap.options.args.modules.args.skins = self.options
+	simpleMinimap.options.args.skins = self.options
 	simpleMinimap:RegisterDefaults("skins", "profile", self.defaults)
 end
 --
-function simpleMinimap_Skins:OnEnable()
+function mod:OnEnable()
 	if(self.db.profile.enabled) then
+		simpleMinimap.GetButtonPos = function(this, vector)
+			local q, x, y = vector, 0, 0
+			if (q < 0) then
+				q = 360 + q
+			end
+			q = floor(q / 90) + 1
+			if(this:IsModuleActive(self) and self:GetShape(q) == "square") then
+				x = math.max(-81, math.min(110 * cos(vector), 81))
+				y = math.max(-81, math.min(110 * sin(vector), 81))
+			else
+				x = 81 * cos(vector)
+				y = 81 * sin(vector)
+			end
+			return 52 - x, y - 54
+		end
 		simpleMinimap:UpdateScreen()
-	else
+		else
 		simpleMinimap:ToggleModuleActive(self, false)
 	end
 end
 --
-function simpleMinimap_Skins:OnDisable()
-	simpleMinimap:UpdateScreen()
+function mod:OnDisable()
+	self:UpdateScreen()
 end
 --
-function simpleMinimap_Skins:GetButtonPos(vector)
-	local x, y
-	if(simpleMinimap:IsModuleActive(self) and self:GetShape() == "square") then
-		x = math.max(-81, math.min(110 * cos(vector), 81))
-		y = math.max(-81, math.min(110 * sin(vector), 81))
-	else
-		x = 81 * cos(vector)
-		y = 81 * sin(vector)
-	end
-	return 52 - x, y - 54
-end
---
-function simpleMinimap_Skins:UpdateScreen()
+function mod:UpdateScreen()
+	local p = self.db.profile
 	if(simpleMinimap:IsModuleActive(self)) then
-		if(self.db.profile.border) then
-			MinimapBorder:SetTexture(self.skins[self.db.profile.skin]["texture"])
+		if(p.border) then
+			MinimapBorder:SetTexture(self.skins[p.skin]["texture"])
 		else
 			MinimapBorder:SetTexture(nil)
 		end
-		Minimap:SetMaskTexture(self.skins[self.db.profile.skin]["mask"])
-	else
+		Minimap:SetMaskTexture(self.skins[p.skin]["mask"])
+		Minimap.smmSkinned = true
+	elseif(Minimap.smmSkinned) then
 		MinimapBorder:SetTexture("Interface\\Minimap\\UI-Minimap-Border")
-		Minimap:SetMaskTexture("textures\\MinimapMask")
+		Minimap:SetMaskTexture("Textures\\MinimapMask")
+		Minimap.smmSkinned = nil
 	end	
 end
 --
-function simpleMinimap_Skins:GetShape()
-	if(simpleMinimap:IsModuleActive(self)) then return(self.skins[self.db.profile.skin].shape) end
+function mod:GetShape(quad)
+	if(simpleMinimap:IsModuleActive(self)) then
+		local p = self.db.profile
+		if(quad and self.skins[p.skin]["quads"]) then
+			return self.skins[p.skin]["quads"][quad] or self.skins[p.skin]["shape"]
+		end
+		return self.skins[p.skin]["shape"]
+	end
 end

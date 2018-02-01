@@ -7,8 +7,9 @@
 ## Notes-esES: Manipula el minimapa de varias formas: mover, escalar, skin.
 ## Notes-zhCN: 迷你地图功能增强; 移动, 缩放, 美化。
 ## Notes-zhTW: 迷你地圖功能增強; 移動, 縮放, 美化。
-## Version: 11200-13
+## Version: 20003-1
 ## SavedVariables: smmConfig
+## X-AceForum: 2228
 ## Dependencites: !Libs
 
 ## X-Website: http://www.wowace.com/projects/simple-minimap/
@@ -17,15 +18,11 @@
 
 localization.lua
 simpleMinimap.lua
-simpleMinimap.xml
 
 modules\autozoom.lua
 modules\compass.lua
-modules\coords.xml
 modules\coords.lua
 modules\gui.lua
-modules\movers.xml
 modules\movers.lua
-modules\pings.xml
 modules\pings.lua
 modules\skins.lua

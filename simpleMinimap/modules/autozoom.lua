@@ -1,11 +1,12 @@
-local L = AceLibrary("AceLocale-2.2"):new("simpleMinimap_Autozoom")
+local mod = simpleMinimap:NewModule("autozoom", "AceEvent-2.0", "AceHook-2.1")
+local L = AceLibrary("AceLocale-2.2"):new("simpleMinimap_autozoom")
 
 L:RegisterTranslations("enUS", function() return({
-	enabled = "enabled",
+	enabled = true,
 	enabled_desc = "enable / disable auto zoom-out function",
-	autozoom = "autozoom",
+	autozoom = true,
 	autozoom_desc = "auto zoom-out minimap after specified time",
-	time = "time",
+	time = true,
 	time_desc = "delay, in seconds, before auto zoom-out"
 }) end)
 
@@ -17,6 +18,8 @@ L:RegisterTranslations("zhTW", function() return({
 }) end)
 
 L:RegisterTranslations("koKR", function() return({
+	enabled = "켬",
+	enabled_desc = "자동 줌-아웃 기능 켜기 / 끄기",
 	autozoom = "자동 줌",
 	autozoom_desc = "지정 시간 후 미니맵 자동 줌-아웃",
 	time = "시간",
@@ -24,6 +27,8 @@ L:RegisterTranslations("koKR", function() return({
 }) end)
 
 L:RegisterTranslations("deDE", function() return({
+	enabled = "aktiviert",
+	enabled_desc = "aktiviert / deaktiviert das automatische rauszoomen",
 	autozoom = "Autozoom",
 	autozoom_desc = "Die Minimap automatisch nach der eingestellten Zeit herauszoomen",
 	time = "Zeit",
@@ -53,13 +58,11 @@ L:RegisterTranslations("ruRU", function() return({
 	time_desc = "Задержка(в секундах) перед изменением масштаба"
 }) end)
 --
-simpleMinimap_Autozoom = simpleMinimap:NewModule("autozoom")
-
-function simpleMinimap_Autozoom:OnInitialize()
+function mod:OnInitialize()
 	self.db = simpleMinimap:AcquireDBNamespace("autozoom")
 	self.defaults = { enabled=true, time=20 }
 	self.options = {
-		type = "group", name=L.autozoom, desc=L.autozoom_desc,
+		type = "group", order=80, name=L.autozoom, desc=L.autozoom_desc,
 		args = {
 			title = {
 				type="header", order=1, name="simpleMinimap |cFFFFFFCC"..L.autozoom
@@ -83,36 +86,31 @@ function simpleMinimap_Autozoom:OnInitialize()
 			}
 		}
 	}
-	simpleMinimap.options.args.modules.args.autozoom = self.options
+	simpleMinimap.options.args.autozoom = self.options
 	simpleMinimap:RegisterDefaults("autozoom", "profile", self.defaults)
 end
 --
-function simpleMinimap_Autozoom:OnEnable()
+function mod:OnEnable()
 	if(self.db.profile.enabled) then
-		self:SecureHook("Minimap_ZoomIn")
-		self:SecureHook("Minimap_ZoomOut")
+		self:SecureHook(Minimap, "SetZoom")
 		self:EventAutozoom()
-	else
+		else
 		simpleMinimap:ToggleModuleActive(self, false)
 	end
 end
 --
-function simpleMinimap_Autozoom:OnDisable()
+function mod:OnDisable()
 	self:CancelAllScheduledEvents()
 end
 --
-function simpleMinimap_Autozoom:EventAutozoom()
-	Minimap:SetZoom(0)
-	MinimapZoomOut:Disable()
-	MinimapZoomIn:Enable()
+function mod:EventAutozoom()
+	if(Minimap:GetZoom() > 0 ) then 
+		Minimap:SetZoom(0)
+		MinimapZoomOut:Disable()
+		MinimapZoomIn:Enable()
+	end
 end
 --
-function simpleMinimap_Autozoom:Minimap_ZoomIn()
-	self:ScheduleEvent("smmAutozoom", self.EventAutozoom, self.db.profile.time, self)
-	--	self.hooks.Minimap_ZoomIn()
-end
---
-function simpleMinimap_Autozoom:Minimap_ZoomOut()
-	self:ScheduleEvent("smmAutozoom", self.EventAutozoom, self.db.profile.time, self)
-	--	self.hooks.Minimap_ZoomOut()
+function mod:SetZoom()
+	self:ScheduleEvent("smmAutozoom", self.EventAutozoom, self.db.profile.time)
 end

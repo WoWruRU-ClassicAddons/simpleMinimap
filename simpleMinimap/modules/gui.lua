@@ -1,8 +1,9 @@
+local mod = simpleMinimap:NewModule("gui")
 local D = AceLibrary("Dewdrop-2.0")
-local L = AceLibrary("AceLocale-2.2"):new("simpleMinimap_GUI")
+local L = AceLibrary("AceLocale-2.2"):new("simpleMinimap_gui")
 
 L:RegisterTranslations("enUS", function() return({
-	enabled = "enabled",
+	enabled = true,
 	enabled_desc = "enable / disable GUI options",
 	gui = "GUI",
 	gui_desc = "dropdown menu options",
@@ -18,6 +19,8 @@ L:RegisterTranslations("zhTW", function() return({
 }) end)
 
 L:RegisterTranslations("koKR", function() return({
+	enabled = "켬",
+	enabled_desc = "GUI 설정 켜기 / 끄기",
 	gui = "GUI",
 	gui_desc = "메뉴 설정",
 	mouse = "마우스 버튼",
@@ -25,6 +28,8 @@ L:RegisterTranslations("koKR", function() return({
 }) end)
 
 L:RegisterTranslations("deDE", function() return({
+	enabled = "aktiviert",
+	enabled_desc = "aktiviert / deaktiviert die GUI optionen",
 	gui = "GUI",
 	gui_desc = "Dropdownmenü Optionen",
 	mouse = "Maustaste",
@@ -54,14 +59,12 @@ L:RegisterTranslations("ruRU", function() return({
 	mouse_desc = "Кнопка мыши приводящая в действие контекстное меню"
 }) end)
 --
-simpleMinimap_GUI = simpleMinimap:NewModule("gui")
-
-function simpleMinimap_GUI:OnInitialize()
+function mod:OnInitialize()
 	self.db = simpleMinimap:AcquireDBNamespace("gui")
 	self.buttons = { "LeftButton", "MiddleButton", "RightButton", "Button4", "Button5" }
 	self.defaults = { enabled = true, button = 3 }
 	self.options = {
-		type="group", name=L.gui, desc=L.gui_desc,
+		type="group", order=80, name=L.gui, desc=L.gui_desc,
 		args={
 			title={
 				type="header", order=1, name="simpleMinimap |cFFFFFFCC"..L.gui
@@ -109,17 +112,17 @@ function simpleMinimap_GUI:OnInitialize()
 			}
 		}
 	}
-	simpleMinimap.options.args.modules.args.gui = self.options
+	simpleMinimap.options.args.gui = self.options
 	simpleMinimap:RegisterDefaults("gui", "profile", self.defaults)
 end
 --
-function simpleMinimap_GUI:OnEnable()
+function mod:OnEnable()
 	if(self.db.profile.enabled) then
 		Minimap:SetScript("OnMouseUp", function()
 			if(arg1 == self.buttons[self.db.profile.button]) then
 				D:Open(MinimapCluster)
 			else
-				return(Minimap_OnClick())
+				return Minimap_OnClick()
 			end
 		end)
 		D:Register(MinimapCluster,
@@ -129,18 +132,18 @@ function simpleMinimap_GUI:OnEnable()
 			'point', function(parent)
 				if parent:GetTop() < GetScreenHeight() / 2 then
 					return 'BOTTOM', 'TOP'
-				else
+					else
 					return 'TOP', 'BOTTOM'
 				end
 			end,
 			'cursorX', true
 		)
-	else
+		else
 		simpleMinimap:ToggleModuleActive(self, false)
 	end
 end
 --
-function simpleMinimap_GUI:OnDisable()
+function mod:OnDisable()
 	Minimap:SetScript("OnMouseUp", function() Minimap_OnClick() end)
 	D:Close()
 	D:Unregister(MinimapCluster)

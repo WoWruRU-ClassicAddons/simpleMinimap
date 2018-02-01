@@ -1,7 +1,7 @@
-local L = AceLibrary("AceLocale-2.2"):new("simpleMinimap_Pings")
-
+local mod = simpleMinimap:NewModule("pings", "AceEvent-2.0")
+local L = AceLibrary("AceLocale-2.2"):new("simpleMinimap_pings")
 L:RegisterTranslations("enUS", function() return({
-	enabled = "enabled",
+	enabled = true,
 	enabled_desc = "enable / disable pinger name popup",
 	alpha = true,
 	alpha_desc = "set ping name frame alpha",
@@ -43,6 +43,8 @@ L:RegisterTranslations("zhTW", function() return({
 }) end)
 
 L:RegisterTranslations("koKR", function() return({
+	enabled = "켜기",
+	enabled_desc = "지정자 이름 팝업 켜기 / 끄기",
 	alpha = "투명도",
 	alpha_desc = "지정 이름 프레임 투명도 설정",
 	pings = "지정",
@@ -63,6 +65,8 @@ L:RegisterTranslations("koKR", function() return({
 }) end)
 
 L:RegisterTranslations("deDE", function() return({
+	enabled = "aktiviert",
+	enabled_desc = "aktiviert / deaktiviert das pingnamen popupfenster",
 	alpha = "Helligkeit",
 	alpha_desc = "Stellt die Helligkeit des Pingfensters ein",
 	pings = "Pings",
@@ -130,23 +134,21 @@ L:RegisterTranslations("ruRU", function() return({
 	pings = "Пинг",
 	pings_desc = "Имя пингера во всплывающем окне",
 	position = "Позиция",
-	position_desc = "Позиция всплывающего оккна имени пингера на мини-карте",
+	position_desc = "Позиция всплывающего окна имени пингера на мини-карте",
 	scale = "Масштаб",
 	scale_desc = "Установить масштаб фреймов имени пингера",
 	position1 = "В нижней части-внутри",
 	position1_desc = "В нижней части мини-карты, внутри фрейма мини-карты",
-	position2 ="В нижней части-снаружы",
-	position2_desc = "В нижней части мини-карты, снаружы фрейма мини-карты",
+	position2 ="В нижней части-снаружи",
+	position2_desc = "В нижней части мини-карты, снаружи фрейма мини-карты",
 	position3 = "В верхней части-внутри",
 	position3_desc = "В верхней части мини-карты, внутри фрейма мини-карты",
-	position4 = "В верхней части-снаружы",
-	position4_desc = "В верхней части мини-карты, снаружы фрейма мини-карты",
+	position4 = "В верхней части-снаружи",
+	position4_desc = "В верхней части мини-карты, снаружи фрейма мини-карты",
 	ping_by = "Пинг"
 }) end)
 --
-simpleMinimap_Pings = simpleMinimap:NewModule("pings")
-
-function simpleMinimap_Pings:OnInitialize()
+function mod:OnInitialize()
 	self.db = simpleMinimap:AcquireDBNamespace("pings")
 	self.positions = {
 		{ "BOTTOM", "BOTTOM" },
@@ -156,7 +158,7 @@ function simpleMinimap_Pings:OnInitialize()
 	}
 	self.defaults = { enabled=true, position=3, alpha=0.9, scale=0.85 }
 	self.options = {
-		type="group", name=L.pings, desc=L.pings_desc,
+		type="group", order=80, name=L.pings, desc=L.pings_desc,
 		args={
 			title = {
 				type="header", order=1, name="simpleMinimap |cFFFFFFCC"..L.pings
@@ -176,7 +178,7 @@ function simpleMinimap_Pings:OnInitialize()
 				type="range", order=10, name=L.alpha, desc=L.alpha_desc,
 				min=0, max=1, step=0.05, isPercent=true,
 				get=function() return(self.db.profile.alpha) end,
-				set=function(x) self.db.profile.alpha=x smmPingFrame:SetAlpha(x) end
+				set=function(x) self.db.profile.alpha=x self:UpdateScreen() end
 			},
 			position = {
 				type="group", order=11, name=L.position, desc=L.position_desc,
@@ -207,40 +209,61 @@ function simpleMinimap_Pings:OnInitialize()
 				type= "range", order=12, name=L.scale, desc=L.scale_desc,
 				min=0.5, max=2, step=0.05,
 				get=function() return(self.db.profile.scale) end,
-				set=function(x) self.db.profile.scale=x smmPingFrame:SetScale(x) end
+				set=function(x) self.db.profile.scale=x self:UpdateScreen() end
 			}
 		}
 	}
-	simpleMinimap.options.args.modules.args.pings = self.options
+	simpleMinimap.options.args.pings = self.options
 	simpleMinimap:RegisterDefaults("pings", "profile", self.defaults)
-	smmPingFrame:SetScale(self.db.profile.scale)
-	smmPingFrame:SetAlpha(self.db.profile.alpha)
-	self:UpdateScreen()
 end
 --
-function simpleMinimap_Pings:OnEnable()
+function mod:OnEnable()
 	if(self.db.profile.enabled) then
+		if(not self.frame) then
+			local f = CreateFrame("Frame", nil, MiniMapPing)
+			f:SetFrameStrata("TOOLTIP")
+			f:SetBackdrop({
+				bgFile="Interface\\Tooltips\\UI-Tooltip-Background",
+				edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",
+				tile="true", tileSize=16, edgeSize=16,
+				insets={ left=5, right=5, top=5, bottom=5 }})
+			f:SetBackdropBorderColor(TOOLTIP_DEFAULT_COLOR.r, TOOLTIP_DEFAULT_COLOR.g, TOOLTIP_DEFAULT_COLOR.b)
+			f:SetBackdropColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b)
+			f:SetScale(self.db.profile.scale)
+			f:SetAlpha(self.db.profile.alpha)
+			t = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+			t:SetPoint("CENTER", f)
+			self.frame = f
+			self.frameText = t
+		end
 		self:RegisterEvent("MINIMAP_PING")
-	else
+		else
 		simpleMinimap:ToggleModuleActive(self, false)
 	end
 end
 --
-function simpleMinimap_Pings:OnDisable()
+function mod:OnDisable()
 end
 --
-function simpleMinimap_Pings:UpdateScreen()
-	smmPingFrame:ClearAllPoints()
-	smmPingFrame:SetPoint(self.positions[self.db.profile.position][1], "Minimap", self.positions[self.db.profile.position][2])
+function mod:UpdateScreen()
+	local f = self.frame
+	if(f) then
+		f:ClearAllPoints()
+		f:SetPoint(self.positions[self.db.profile.position][1], "Minimap", self.positions[self.db.profile.position][2])
+		f:SetScale(self.db.profile.scale)
+		f:SetAlpha(self.db.profile.alpha)
+	end
 end
 --
-function simpleMinimap_Pings:MINIMAP_PING()
+function mod:MINIMAP_PING()
+	local f = self.frame
+	local t = self.frameText
 	if(not UnitIsUnit(arg1, "player")) then
-		smmPingFrameText:SetText(L.ping_by.." |cFFFFFFCC"..UnitName(arg1))
-		smmPingFrame:SetWidth(smmPingFrameText:GetWidth() + 16)
-		smmPingFrame:SetHeight(smmPingFrameText:GetHeight() + 12)
-		smmPingFrame:Show()
+		t:SetText(L.ping_by.." |cFFFFFFCC"..UnitName(arg1))
+		f:SetWidth(self.frameText:GetWidth() + 16)
+		f:SetHeight(self.frameText:GetHeight() + 12)
+		f:Show()
 	else
-		smmPingFrame:Hide()
+		f:Hide()
 	end
 end
